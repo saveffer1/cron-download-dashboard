@@ -1,0 +1,15 @@
+{% extends "layout.njk" %}
+
+{% block content %}
+  <h1>{{ message }}</h1>
+
+  <p>รายการที่ต้องทำ:</p>
+  <ul>
+    {% for item in items %}
+      <li>{{ item }}</li>
+    {% endfor %}
+  </ul>
+
+  <p>นี่คือตัวอย่างการใช้ Nunjucks ที่เรียบง่ายแต่ทรงพลัง!</p>
+  <i class="bi bi-folder-fill"></i>
+{% endblock %}

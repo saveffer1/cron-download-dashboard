@@ -1,5 +1,6 @@
 const express = require('express');
 const path = require('path');
+const nunjucks = require('nunjucks');
 
 const corsConfig = require('./middlewares/cors_config');
 const helmetConfig = require('./middlewares/helmet_config');
@@ -14,7 +15,7 @@ function createApp() {
     const app = express();
 
     app.set('views', path.join(__dirname, 'views'));
-    app.set('view engine', 'pug');
+    app.set('view engine', 'njk');
 
     app.use(express.static(path.join(__dirname, 'public')));
 
@@ -47,5 +48,11 @@ function createApp() {
 }
 
 const app = createApp();
+
+nunjucks.configure('views', {
+  autoescape: true,
+  express: app,
+  watch: true,
+});
 
 module.exports = app;
