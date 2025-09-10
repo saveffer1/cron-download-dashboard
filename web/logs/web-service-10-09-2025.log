@@ -1,0 +1,14 @@
+{"level":"info","message":"Server running on port 5000","timestamp":"10-09-2025-15:14:25"}
+{"level":"info","message":"Server running on port 5000","timestamp":"10-09-2025-15:14:27"}
+{"level":"info","message":"Server running on port 5000","timestamp":"10-09-2025-15:14:31"}
+{"level":"info","message":"Server running on port 5000","timestamp":"10-09-2025-15:14:57"}
+{"level":"info","message":"IP: ::ffff:127.0.0.1 GET / status: 302 lenght: 32 bytes 2.170 ms","timestamp":"10-09-2025-15:16:39"}
+{"level":"info","message":"Server running on port 5000","timestamp":"10-09-2025-15:17:51"}
+{"level":"info","message":"Server running on port 80","timestamp":"10-09-2025-15:18:16"}
+{"level":"info","message":"IP: ::ffff:103.10.231.150 GET / status: 302 lenght: 39 bytes 2.530 ms","timestamp":"10-09-2025-15:18:20"}
+{"level":"info","message":"IP: ::ffff:103.10.231.150 GET /dashboard status: 500 lenght: 1747 bytes 117.092 ms","timestamp":"10-09-2025-15:18:21"}
+{"level":"info","message":"IP: ::ffff:37.60.141.158 GET / status: 302 lenght: 32 bytes 0.538 ms","timestamp":"10-09-2025-15:19:29"}
+{"level":"info","message":"IP: ::ffff:196.251.87.47 GET / status: 302 lenght: 32 bytes 0.295 ms","timestamp":"10-09-2025-15:19:48"}
+{"level":"info","message":"Server running on port 80","timestamp":"10-09-2025-15:19:57"}
+{"level":"info","message":"IP: ::ffff:103.10.231.150 GET /dashboard status: 200 lenght: 762 bytes 192.799 ms","timestamp":"10-09-2025-15:19:59"}
+{"level":"info","message":"IP: ::ffff:196.251.87.47 GET / status: 302 lenght: 32 bytes 1.901 ms","timestamp":"10-09-2025-15:22:27"}

@@ -1,0 +1,65 @@
+version: '3.8'
+
+# --------------------------------------------------------------------------
+#  NETWORK CONFIGURATION
+# --------------------------------------------------------------------------
+networks:
+  cron-net:
+    driver: bridge
+
+# --------------------------------------------------------------------------
+#  VOLUME CONFIGURATION
+# --------------------------------------------------------------------------
+volumes:
+  downloads:
+  pg-data:
+
+# --------------------------------------------------------------------------
+#  SERVICES DEFINITION
+# --------------------------------------------------------------------------
+services:
+
+  # 1. Rust Web Application Service
+  web-app:
+    build: ./web
+    ports:
+      - "80:5000"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    env_file:
+      - .env
+    depends_on:
+      - postgres
+    networks:
+      - cron-net
+    restart: always
+
+  # 2. Cron Job Service
+  cron-app:
+    build: ./cron
+    container_name: cron-app
+    volumes:
+      - downloads:/downloads
+    env_file:
+      - .env
+    depends_on:
+      - postgres
+    networks:
+      - cron-net
+    restart: always
+
+  # 3. PostgreSQL Database Service
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      - POSTGRES_USER=${DB_USERNAME}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=cronjob_db
+    volumes:
+      - pg-data:/var/lib/postgresql/data
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5432:5432"
+    networks:
+      - cron-net
+    restart: always

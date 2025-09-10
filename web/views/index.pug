@@ -1,0 +1,14 @@
+//- views/index.pug
+extends layout
+
+//- เนื้อหาที่จะนำไปใส่ใน 'block content' ของ layout.pug
+block content
+  h1= message
+
+  p รายการที่ต้องทำ:
+  ul
+    //- วนลูปข้อมูล items ที่ส่งมาจาก Express
+    each item in items
+      li= item
+
+  p นี่คือตัวอย่างการใช้ Pug ที่เรียบง่ายแต่ทรงพลัง!

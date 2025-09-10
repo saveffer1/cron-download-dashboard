@@ -1,0 +1,14 @@
+//- views/layout.pug
+doctype html
+html(lang="th")
+  head
+    meta(charset="UTF-8")
+    meta(name="viewport", content="width=device-width, initial-scale=1.0")
+    title= title
+    style.
+      body { font-family: sans-serif; padding: 20px; }
+      h1 { color: #333; }
+      ul { list-style-type: square; }
+  body
+    //- block content คือพื้นที่ที่หน้าที่ extend ไปจะเอาเนื้อหามาใส่
+    block content
