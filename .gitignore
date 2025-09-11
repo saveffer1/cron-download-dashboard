@@ -1,3 +1,6 @@
+# custom ignore rules
+cookie.txt
+
 #Ignore log files
 logs
 
