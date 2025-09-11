@@ -1,0 +1,7 @@
+<svg width="200" height="60" viewBox="0 0 200 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="200" height="60" fill="#FFFFFF"/>
+  <path d="M20 30L40 10L60 30L40 50L20 30Z" fill="#232C65"/>
+  <path d="M40 30L50 20L60 30L50 40L40 30Z" fill="#1a224d"/>
+  <text x="70" y="28" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#232C65">IIG Network</text>
+  <text x="70" y="48" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#232C65">Monitor</text>
+</svg>

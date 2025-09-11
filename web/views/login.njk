@@ -22,8 +22,18 @@
 <div class="container d-flex justify-content-center align-items-center min-vh-100">
   <div class="card shadow-lg p-4" style="width: 100%; max-width: 400px;">
     <div class="card-body">
-      <h3 class="card-title text-center mb-4" style="color: var(--main-color);">Login</h3>
+      <div class="text-center mb-4">
+        <img src="/images/logo.svg" alt="IIG Network Monitor Logo" style="max-width: 150px;">
+      </div>
+      
       <form id="login-form">
+        <div class="mb-3">
+          <label for="login-method" class="form-label">Login Method</label>
+          <select class="form-select" id="login-method">
+            <option value="local">Local Database</option>
+            <!-- Future authentication methods will go here -->
+          </select>
+        </div>
         <div class="mb-3">
           <label for="username" class="form-label">Username</label>
           <div class="input-group">

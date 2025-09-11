@@ -1,6 +1,7 @@
 const express = require('express');
 const path = require('path');
 const nunjucks = require('nunjucks');
+const csurf = require('csurf');
 
 const corsConfig = require('./middlewares/cors_config');
 const helmetConfig = require('./middlewares/helmet_config');
@@ -10,7 +11,9 @@ const httpLogger = require('./middlewares/http_logger_config');
 const logger = require('./utils/logger');
 
 const apiRouter = require('./routes/api_router');
+const authRouter = require('./routes/auth_router');
 const dashboardRouter = require('./routes/dashboard_router');
+const contentRouter = require('./routes/content_router'); // New
 
 function createApp() {
     const app = express();
@@ -51,17 +54,33 @@ function createApp() {
         store,
     }));
 
+    // Auth routes (no CSRF)
+    app.use('/api/auth', authRouter);
+
+    // CSRF Protection
+    const csrfProtection = csurf();
+    app.use(csrfProtection);
+
+    app.get('/api/csrf-token', (req, res) => {
+        res.json({ csrfToken: req.csrfToken() });
+    });
+
     app.use('/dashboard', dashboardRouter);
+    app.use('/dashboard/content', contentRouter);
     app.use('/api', apiRouter);
 
     app.use(async (req, res) => {
         res.status(404).json({ message: 'Not Found' });
     })
 
-    app.use(async (error, req, res) => {
-        logger.error(error.stack);
-        res.status(500).json({ message: 'Internal Server Error' });
-    })
+    app.use(async (error, req, res, next) => {
+        if (error.code === 'EBADCSRFTOKEN') {
+            res.status(403).json({ error: 'Invalid CSRF token' });
+        } else {
+            logger.error(error.stack);
+            res.status(500).json({ message: 'Internal Server Error' });
+        }
+    });
 
     return app;
 }

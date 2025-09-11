@@ -8,16 +8,19 @@
     "dev": "export $(cat .env | xargs) && nodemon",
     "start": "node index.js",
     "tailwind:init": "tailwindcss init -p",
-    "migrate": "export $(cat .env | xargs) && npx knex migrate:latest"
+    "migrate": "export $(cat .env | xargs) && npx knex migrate:latest",
+    "seed": "export $(cat .env | xargs) && npx knex seed:run"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "alpinejs": "^3.15.0",
     "bcrypt": "^6.0.0",
     "body-parser": "^2.2.0",
     "connect-session-knex": "^4.0.2",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
+    "csurf": "^1.11.0",
     "envalid": "^8.1.0",
     "express": "^5.1.0",
     "express-rate-limit": "^8.1.0",

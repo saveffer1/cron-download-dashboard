@@ -19,14 +19,12 @@ const helmetConfig = helmet({
       ],
       scriptSrc: [
         "'self'",
-        "https://cdn.jsdelivr.net"
+        "https://cdn.jsdelivr.net",
+        "'unsafe-inline'", // Allowed for dynamically loaded scripts
+        "'unsafe-eval'" // Required for Alpine.js
       ],
       objectSrc: ["'none'"],
-      formAction: [
-        "'self'",
-        `http://${env.APP_HOST}:${env.PORT}`,
-        `https://${env.APP_HOST}:${env.PORT}`
-      ],
+              formAction: ["*"], // Allow all form actions for development (less secure)
       upgradeInsecureRequests: null 
     },
   },

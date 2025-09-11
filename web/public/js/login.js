@@ -7,6 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
+            const loginMethod = document.getElementById('login-method').value; // Get selected login method
 
             try {
                 const response = await fetch('/api/auth/login', {
@@ -14,7 +15,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ username, password })
+                    body: JSON.stringify({ username, password, loginMethod }) // Send loginMethod
                 });
 
                 const data = await response.json();

@@ -1,0 +1,88 @@
+{% extends "layout.njk" %}
+
+{% block content %}
+<style>
+  :root {
+    --main-color: #232C65;
+  }
+  .top-bar {
+    background-color: var(--main-color);
+    color: white;
+    padding: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .sidebar {
+    background-color: #f8f9fa; /* Light gray for sidebar */
+    padding: 1rem;
+    height: calc(100vh - 64px); /* Full height minus top bar height */
+    border-right: 1px solid #e9ecef;
+  }
+  .sidebar .nav-link {
+    color: #333;
+    padding: 0.75rem 1rem;
+    border-radius: 0.25rem;
+    margin-bottom: 0.5rem;
+  }
+  .sidebar .nav-link.active,
+  .sidebar .nav-link:hover {
+    background-color: var(--main-color);
+    color: white;
+  }
+  .content-panel {
+    padding: 1.5rem;
+  }
+</style>
+
+<div class="d-flex flex-column vh-100">
+  <!-- Top Bar Panel -->
+  <div class="top-bar shadow-sm">
+    <h4 class="mb-0">Cron Download Dashboard</h4>
+    <div>
+      <i class="bi bi-person-circle me-2"></i>
+      <span>Logged in as: {{ username }} ({{ role }})</span>
+      <button id="logout-button" class="btn btn-sm btn-outline-light ms-3"><i class="bi bi-box-arrow-right"></i> Logout</button>
+    </div>
+  </div>
+
+  <div class="d-flex flex-grow-1">
+    <!-- Left Menu Panel -->
+    <div class="sidebar col-md-2">
+      <nav class="nav flex-column">
+        <a class="nav-link active" href="/dashboard/cronjob" data-section-id="cronjob-section"><i class="bi bi-clock-history me-2"></i>Cronjob</a>
+        {% if role === 'admin' %}<a class="nav-link" href="/dashboard/user-management" data-section-id="user-management-section"><i class="bi bi-people me-2"></i>User Management</a>{% endif %}
+        {% if role === 'admin' %}<a class="nav-link" href="/dashboard/identity-management" data-section-id="identity-management-section"><i class="bi bi-fingerprint me-2"></i>Identity Management</a>{% endif %}
+        <a class="nav-link" href="/dashboard/profile-settings" data-section-id="profile-settings-section"><i class="bi bi-person-gear me-2"></i>Profile Settings</a>
+      </nav>
+    </div>
+
+    <!-- Main Content Panel -->
+    <div class="content-panel col-md-10 flex-grow-1">
+      <div class="tab-content">
+        <div class="tab-pane fade show active" id="cronjob-section">
+          <h3>Cronjob Management</h3>
+          <p>This is where cronjob-related content will go.</p>
+        </div>
+        <div class="tab-pane fade" id="user-management-section">
+          <!-- Content will be loaded dynamically -->
+        </div>
+        <div class="tab-pane fade" id="profile-settings-section">
+          <!-- Content will be loaded dynamically -->
+        </div>
+        <div class="tab-pane fade" id="identity-management-section">
+          <!-- Content will be loaded dynamically -->
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="/js/dashboard.js"></script>
+<script src="/js/logout.js"></script>
+<script>
+  // Initialize logout functionality after logout.js is loaded
+  if (typeof initializeLogout === 'function') {
+    initializeLogout();
+  }
+</script>
+{% endblock %}
