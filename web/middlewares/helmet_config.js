@@ -1,34 +1,36 @@
 const helmet = require('helmet');
+const env = require('../utils/config');
 
-const helmeted = helmet({
+const helmetConfig = helmet({
   contentSecurityPolicy: {
+    useDefaults: false,
     directives: {
       defaultSrc: ["'self'"],
       styleSrc: [
         "'self'",
-        "https://cdn.jsdelivr.net", // allow Bootstrap & Icons CSS
-        "https://fonts.googleapis.com" // ถ้าใช้ Google Fonts
+        "https://cdn.jsdelivr.net",
+        "https://fonts.googleapis.com",
+        "'unsafe-inline'"
       ],
       fontSrc: [
         "'self'",
         "https://cdn.jsdelivr.net",
-        "https://fonts.gstatic.com" // font ของ icons & google fonts
+        "https://fonts.gstatic.com"
       ],
       scriptSrc: [
         "'self'",
-        "https://cdn.jsdelivr.net" // allow Bootstrap JS
+        "https://cdn.jsdelivr.net"
       ],
       objectSrc: ["'none'"],
-      upgradeInsecureRequests: []
+      formAction: [
+        "'self'",
+        `http://${env.APP_HOST}:${env.PORT}`,
+        `https://${env.APP_HOST}:${env.PORT}`
+      ],
+      upgradeInsecureRequests: null 
     },
   },
-  crossOriginOpenerPolicy: true,
-  crossOriginResourcePolicy: true,
-  referrerPolicy: { policy: 'no-referrer' },
-  strictTransportSecurity: { maxAge: 15552000, includeSubDomains: true },
-  xDnsPrefetchControl: { allow: false },
-  xPoweredBy: false,
-  xXssProtection: true,
+  hsts: false, // ปิด HSTS
 });
 
-module.exports = helmeted;
+module.exports = helmetConfig;

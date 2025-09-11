@@ -10,11 +10,23 @@ exports.login = async (req, res) => {
   const valid = await bcrypt.compare(password, user.password_hash);
   if (!valid) return res.status(401).json({ error: "Invalid credentials" });
 
-  // save session
-  req.session.userId = user.id;
-  req.session.role = user.role;
+  // regenerate session to prevent session fixation
+  req.session.regenerate((err) => {
+    if (err) {
+      return res.status(500).json({ error: "Failed to regenerate session" });
+    }
 
-  res.json({ message: "Login successful", user: { username, role: user.role } });
+    // save session
+    req.session.userId = user.id;
+    req.session.role = user.role;
+
+    req.session.save((err) => {
+      if (err) {
+        return res.status(500).json({ error: "Failed to save session" });
+      }
+      res.json({ message: "Login successful", user: { username, role: user.role } });
+    });
+  });
 };
 
 exports.refresh = (req, res) => {

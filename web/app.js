@@ -4,6 +4,7 @@ const nunjucks = require('nunjucks');
 
 const corsConfig = require('./middlewares/cors_config');
 const helmetConfig = require('./middlewares/helmet_config');
+
 const rateLimitConfig = require('./middlewares/limit_config');
 const httpLogger = require('./middlewares/http_logger_config');
 const logger = require('./utils/logger');
@@ -23,7 +24,7 @@ function createApp() {
 
     app.use(express.json());
     app.use(express.urlencoded({ extended: true }));
-    app.use(corsConfig);
+    
     app.use(helmetConfig);
     app.use(rateLimitConfig);
     app.use(httpLogger);
@@ -31,6 +32,24 @@ function createApp() {
     app.get('/', (req, res) => {
         res.redirect('/dashboard');
     });
+
+    
+        const session = require('express-session');
+    const KnexSessionStore = require('connect-session-knex')(session);
+    const knex = require('./utils/db');
+    const env = require('./utils/config');
+
+    const store = new KnexSessionStore({
+        knex,
+        tablename: 'sessions',
+    });
+
+    app.use(session({
+        secret: env.SESSION_SECRET,
+        resave: false,
+        saveUninitialized: true,
+        store,
+    }));
 
     app.use('/dashboard', dashboardRouter);
     app.use('/api', apiRouter);

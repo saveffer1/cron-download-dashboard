@@ -1,5 +1,5 @@
 {
     "watch": ["."],
-    "ext": "js, pug",
+    "ext": "js, pug, njk",
     "exec": "node index.js"
 }

@@ -1,10 +1,13 @@
 const router = require('express').Router();
 const path = require('path');
+const corsConfig = require('../middlewares/cors_config');
 
 const { requireLogin } = require("../middlewares/authMiddleware");
 
 // Controllers
-const authController = require("../controllers/authController");
+const authController = require("../controllers/auth");
+
+router.use(corsConfig);
 
 router.get('/', (req, res) => {
     res.status(200).json({ message: 'API is working!' });

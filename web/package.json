@@ -5,20 +5,23 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "nodemon",
+    "dev": "export $(cat .env | xargs) && nodemon",
     "start": "node index.js",
-    "tailwind:init": "tailwindcss init -p"
+    "tailwind:init": "tailwindcss init -p",
+    "migrate": "export $(cat .env | xargs) && npx knex migrate:latest"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
     "bcrypt": "^6.0.0",
     "body-parser": "^2.2.0",
+    "connect-session-knex": "^4.0.2",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "envalid": "^8.1.0",
     "express": "^5.1.0",
     "express-rate-limit": "^8.1.0",
+    "express-session": "^1.18.2",
     "express-validator": "^7.2.1",
     "helmet": "^8.1.0",
     "knex": "^3.1.0",
@@ -28,6 +31,7 @@
     "pg": "^8.16.3",
     "postcss-cli": "^11.0.1",
     "pug": "^3.0.3",
+    "sweetalert2": "^11.23.0",
     "winston": "^3.17.0",
     "winston-daily-rotate-file": "^5.0.0"
   },
