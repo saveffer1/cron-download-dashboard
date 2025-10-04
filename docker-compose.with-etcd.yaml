@@ -38,6 +38,7 @@ services:
           connect_address: ${INSTALL_NODE_IP}:${REST_PORT}
 
         etcd:
+          use_v3: false
           hosts:
             - ${NODE1_IP}:${ETCD_CLIENT_PORT}
             - ${NODE2_IP}:${ETCD_CLIENT_PORT}
@@ -53,6 +54,8 @@ services:
                 max_connections: 200
                 shared_buffers: 1GB
                 password_encryption: scram-sha-256
+                shared_preload_libraries: 'bg_mon,pg_stat_statements,pgextwlist,pg_auth_mon,set_user,timescaledb,pg_cron,pg_stat_kcache'
+                cron.database_name: 'postgres'
           initdb:
             - encoding: UTF8
             - data-checksums
@@ -68,7 +71,6 @@ services:
               options: [login, createdb]
 
         postgresql:
-          # ฟังบนพอร์ต node (เช่น 15432) เพื่อให้ HAProxy ต่อเข้าไป
           listen: 0.0.0.0:${NODE_PORT_HOST}
           connect_address: ${INSTALL_NODE_IP}:${NODE_PORT_HOST}
           data_dir: /home/postgres/pgdata/pgroot/data
@@ -82,7 +84,8 @@ services:
               password: ${REPL_PASS}
 
           parameters:
-            shared_preload_libraries: 'pg_stat_statements, bg_mon,pgextwlist,pg_auth_mon,set_user,timescaledb,pg_stat_kcache'
+            shared_preload_libraries: 'bg_mon,pg_stat_statements,pgextwlist,pg_auth_mon,set_user,timescaledb,pg_cron,pg_stat_kcache'
+            cron.database_name: 'postgres'
 
           pg_hba:
             - local all all peer
@@ -120,6 +123,7 @@ services:
             bind *:5432
             default_backend pg_cluster
         backend pg_cluster
+            # Patroni 4 ใช้ /primary สำหรับ health primary
             option httpchk GET /primary
             http-check expect status 200
             server node1 ${NODE1_IP}:${NODE1_DB_PORT} check port ${REST_PORT} inter 1s rise 2 fall 2
