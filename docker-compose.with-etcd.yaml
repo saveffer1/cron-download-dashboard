@@ -86,8 +86,12 @@ services:
           parameters:
             shared_preload_libraries: 'bg_mon,pg_stat_statements,pgextwlist,pg_auth_mon,set_user,timescaledb,pg_cron,pg_stat_kcache'
             cron.database_name: 'postgres'
+            unix_socket_directories: /var/run/postgresql
+            unix_socket_permissions: '0700'
+            port: ${NODE_PORT_HOST}
 
           pg_hba:
+            - local replication ${REPL_USER} trust 
             - local all all peer
             - host all all 127.0.0.1/32 scram-sha-256
             - host all all ::1/128 scram-sha-256
@@ -123,7 +127,6 @@ services:
             bind *:5432
             default_backend pg_cluster
         backend pg_cluster
-            # Patroni 4 ใช้ /primary สำหรับ health primary
             option httpchk GET /primary
             http-check expect status 200
             server node1 ${NODE1_IP}:${NODE1_DB_PORT} check port ${REST_PORT} inter 1s rise 2 fall 2
