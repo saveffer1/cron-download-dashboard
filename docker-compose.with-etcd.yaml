@@ -30,9 +30,6 @@ services:
       PGPORT: ${NODE_PORT}
       APIPORT: ${REST_PORT}
       SPILO_CONFIGURATION: |
-        postgresql:
-          parameters:
-            shared_preload_libraries: 'pg_stat_statements'
         scope: ${SCOPE}
         restapi:
           listen: 0.0.0.0:${REST_PORT}
@@ -66,7 +63,7 @@ services:
               password: ${APP_PASS}
               options: [login, createdb]
         postgresql:
-          listen: 0.0.0.0:${NODE_PORT}
+          listen: 0.0.0.0:${NODE_PORT_HOST}
           connect_address: ${INSTALL_NODE_IP}:${NODE_PORT_HOST}
           data_dir: /home/postgres/pgdata/pgroot/data
           authentication:
@@ -76,9 +73,12 @@ services:
             replication:
               username: ${REPL_USER}
               password: ${REPL_PASS}
+          parameters:
+            shared_preload_libraries: 'pg_stat_statements'
           pg_hba:
             - host replication ${REPL_USER} ${NODE_SUBNET} scram-sha-256
             - host all all ${NODE_SUBNET} scram-sha-256
+
     volumes:
       - /mnt/data/pgdb-${INSTALL_NODE}:/home/postgres/pgdata
     ports:
