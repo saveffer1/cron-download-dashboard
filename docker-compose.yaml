@@ -1,37 +1,126 @@
-# --------------------------------------------------------------------------
-#  VOLUME CONFIGURATION
-# --------------------------------------------------------------------------
-volumes:
-  downloads:
-  pg-data:
+version: '3.8'
 
-# --------------------------------------------------------------------------
-#  SERVICES DEFINITION
-# --------------------------------------------------------------------------
 services:
-
-  # 1. Node.js Web Application Service
-  # web-app:
-  #   build: ./web
-  #   ports:
-  #     - "80:5000"
-  #   volumes:
-  #     - /var/run/docker.sock:/var/run/docker.sock
-  #   env_file:
-  #     - .env
-  #   depends_on:
-  #     - postgres
-  #   restart: always
-
-  # 2. PostgreSQL Database Service
-  postgres:
-    image: postgres:16-alpine
-    environment:
-      - POSTGRES_USER=${DB_USERNAME}
-      - POSTGRES_PASSWORD=${DB_PASSWORD}
-      - POSTGRES_DB=cronjob_db
-    volumes:
-      - pg-data:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
+  etcd:
+    image: quay.io/coreos/etcd:v3.5.13
+    container_name: ${INSTALL_NODE}-etcd
     restart: always
+    command: >
+      /usr/local/bin/etcd
+      --name=${INSTALL_NODE}
+      --data-dir=/etcd-data
+      --initial-advertise-peer-urls=http://${INSTALL_NODE_IP}:${ETCD_PORT}
+      --listen-peer-urls=http://0.0.0.0:${ETCD_PORT}
+      --listen-client-urls=http://0.0.0.0:${ETCD_CLIENT_PORT}
+      --advertise-client-urls=http://${INSTALL_NODE_IP}:${ETCD_CLIENT_PORT}
+      --initial-cluster=${ETCD_PEERS}
+      --initial-cluster-token=${CLUSTER_TOKEN}
+      --initial-cluster-state=new
+    ports:
+      - "${ETCD_CLIENT_PORT}:${ETCD_CLIENT_PORT}"
+      - "${ETCD_PORT}:${ETCD_PORT}"
+    volumes:
+      - etcd_data:/etcd-data
+    networks:
+      - patroni_net
+
+  patroni:
+    image: ghcr.io/zalando/spilo-17:4.0-p3
+    container_name: ${INSTALL_NODE}-patroni
+    hostname: ${INSTALL_NODE}
+    restart: always
+    environment:
+      SCOPE: ${SCOPE}
+      PGPORT: ${NODE_PORT}
+      APIPORT: ${REST_PORT}
+      SPILO_CONFIGURATION: |
+        scope: ${SCOPE}
+        restapi:
+          listen: 0.0.0.0:${REST_PORT}
+          connect_address: ${INSTALL_NODE_IP}:${REST_PORT}
+        etcd:
+          host: ${ETCD_CLIENTS}
+        bootstrap:
+          dcs:
+            ttl: 30
+            loop_wait: 10
+            retry_timeout: 10
+            postgresql:
+              parameters:
+                max_connections: 200
+                shared_buffers: 1GB
+                password_encryption: scram-sha-256
+          initdb:
+            - encoding: UTF8
+            - data-checksums
+          users:
+            ${PG_SUPERUSER}:
+              password: ${PG_SUPERPASS}
+              options: [superuser, createdb, createrole]
+            ${REPL_USER}:
+              password: ${REPL_PASS}
+              options: [replication]
+            ${APP_USER}:
+              password: ${APP_PASS}
+              options: [login, createdb]
+        postgresql:
+          listen: 0.0.0.0:${NODE_PORT}
+          connect_address: ${INSTALL_NODE_IP}:${NODE_PORT_HOST}
+          data_dir: /home/postgres/pgdata/pgroot/data
+          authentication:
+            superuser:
+              username: ${PG_SUPERUSER}
+              password: ${PG_SUPERPASS}
+            replication:
+              username: ${REPL_USER}
+              password: ${REPL_PASS}
+          pg_hba:
+            - host replication ${REPL_USER} 192.168.234.0/24 scram-sha-256
+            - host all all 192.168.234.0/24 scram-sha-256
+
+    volumes:
+      - /mnt/data/pgdb-${INSTALL_NODE}:/home/postgres/pgdata
+    ports:
+      - "${REST_PORT}:8008"
+      - "${NODE_PORT_HOST}:${NODE_PORT}"
+    depends_on:
+      - etcd
+    networks:
+      - patroni_net
+
+  haproxy:
+    image: haproxy:2.8
+    container_name: ${INSTALL_NODE}-haproxy
+    restart: always
+    environment:
+      - NODE_PORT=${NODE_PORT}
+      - NODE1_IP=${NODE1_IP}
+      - NODE2_IP=${NODE2_IP}
+      - NODE3_IP=${NODE3_IP}
+      - NODE1_DB_PORT=${NODE1_DB_PORT}
+      - NODE2_DB_PORT=${NODE2_DB_PORT}
+      - NODE3_DB_PORT=${NODE3_DB_PORT}
+      - REST_PORT=${REST_PORT}
+    volumes:
+      - ./haproxy.cfg.template:/usr/local/etc/haproxy/haproxy.cfg.template:ro
+    entrypoint: >
+      sh -c "envsubst < /usr/local/etc/haproxy/haproxy.cfg.template > /usr/local/etc/haproxy/haproxy.cfg &&
+             exec haproxy -f /usr/local/etc/haproxy/haproxy.cfg"
+    ports:
+      - "${NODE_PORT}:${NODE_PORT}"
+    depends_on:
+      - patroni
+    networks:
+      - patroni_net
+    profiles:
+      - haproxy
+
+volumes:
+  etcd_data:
+
+networks:
+  patroni_net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: ${NODE_SUBNET}

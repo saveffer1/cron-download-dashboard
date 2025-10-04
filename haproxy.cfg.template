@@ -1,0 +1,25 @@
+global
+    log stdout format raw local0
+    maxconn 200
+
+defaults
+    log global
+    mode tcp
+    timeout connect 10s
+    timeout client 1m
+    timeout server 1m
+    option tcp-smart-accept
+    option tcp-smart-connect
+
+frontend postgres
+    bind *:${NODE_PORT}
+    default_backend pg_cluster
+
+backend pg_cluster
+    option httpchk GET /master
+    http-check expect status 200
+    default-server inter 2s fall 3 rise 2 on-marked-down shutdown-sessions
+
+    server node1 ${NODE1_IP}:${NODE1_DB_PORT} check port ${REST_PORT}
+    server node2 ${NODE2_IP}:${NODE2_DB_PORT} check port ${REST_PORT}
+    server node3 ${NODE3_IP}:${NODE3_DB_PORT} check port ${REST_PORT}
