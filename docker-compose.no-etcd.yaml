@@ -19,6 +19,29 @@ services:
             - ${NODE1_IP}:${ETCD_CLIENT_PORT}
             - ${NODE2_IP}:${ETCD_CLIENT_PORT}
             - ${NODE3_IP}:${ETCD_CLIENT_PORT}
+        bootstrap:
+          dcs:
+            ttl: 30
+            loop_wait: 10
+            retry_timeout: 10
+            postgresql:
+              parameters:
+                max_connections: 200
+                shared_buffers: 1GB
+                password_encryption: scram-sha-256
+          initdb:
+            - encoding: UTF8
+            - data-checksums
+          users:
+            ${PG_SUPERUSER}:
+              password: ${PG_SUPERPASS}
+              options: [superuser, createdb, createrole]
+            ${REPL_USER}:
+              password: ${REPL_PASS}
+              options: [replication]
+            ${APP_USER}:
+              password: ${APP_PASS}
+              options: [login, createdb]
         postgresql:
           listen: 0.0.0.0:${NODE_PORT}
           connect_address: ${INSTALL_NODE_IP}:${NODE_PORT_HOST}
@@ -35,10 +58,6 @@ services:
             - host all all ${NODE_SUBNET} scram-sha-256
     volumes:
       - /mnt/data/pgdb-${INSTALL_NODE}:/home/postgres/pgdata
-    ports:
-      - "${REST_PORT}:8008"
-      - "${NODE_PORT_HOST}:${NODE_PORT}"
-    networks: [patroni_net]
 
   haproxy:
     image: haproxy:2.8
@@ -81,16 +100,5 @@ services:
         EOF
         /usr/local/sbin/haproxy -c -f /tmp/haproxy.cfg
         exec /usr/local/sbin/haproxy -W -db -f /tmp/haproxy.cfg
-    ports:
-      - "${NODE_PORT}:${NODE_PORT}"
     depends_on:
       - patroni
-    networks:
-      - patroni_net
-
-networks:
-  patroni_net:
-    driver: bridge
-    ipam:
-      config:
-        - subnet: ${NODE_SUBNET}
