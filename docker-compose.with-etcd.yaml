@@ -15,6 +15,7 @@ services:
       --initial-cluster=${ETCD_PEERS}
       --initial-cluster-token=${CLUSTER_TOKEN}
       --initial-cluster-state=new
+      --enable-v2=true
     volumes:
       - etcd_data:/etcd-data
 
@@ -34,7 +35,6 @@ services:
           listen: 0.0.0.0:${REST_PORT}
           connect_address: ${INSTALL_NODE_IP}:${REST_PORT}
         etcd:
-          use_v3: true
           hosts:
             - ${NODE1_IP}:${ETCD_CLIENT_PORT}
             - ${NODE2_IP}:${ETCD_CLIENT_PORT}
