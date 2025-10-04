@@ -23,6 +23,7 @@ services:
     container_name: ${INSTALL_NODE}-patroni
     hostname: ${INSTALL_NODE}
     restart: always
+    network_mode: host
     environment:
       SCOPE: ${SCOPE}
       PGPORT: ${NODE_PORT}
@@ -87,6 +88,7 @@ services:
     image: haproxy:2.8
     container_name: ${INSTALL_NODE}-haproxy
     restart: always
+    network_mode: host
     environment:
       NODE_PORT: ${NODE_PORT}
       NODE1_IP: ${NODE1_IP}
