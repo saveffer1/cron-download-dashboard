@@ -14,7 +14,10 @@ services:
           listen: 0.0.0.0:${REST_PORT}
           connect_address: ${INSTALL_NODE_IP}:${REST_PORT}
         etcd:
-          host: ${ETCD_CLIENTS}
+          hosts:
+            - ${NODE1_IP}:${ETCD_CLIENT_PORT}
+            - ${NODE2_IP}:${ETCD_CLIENT_PORT}
+            - ${NODE3_IP}:${ETCD_CLIENT_PORT}
         bootstrap:
           dcs:
             ttl: 30
@@ -50,13 +53,15 @@ services:
               username: ${REPL_USER}
               password: ${REPL_PASS}
           pg_hba:
-            - host replication ${REPL_USER} 192.168.234.0/24 scram-sha-256
-            - host all all 192.168.234.0/24 scram-sha-256
+            - host replication ${REPL_USER} ${NODE_SUBNET} scram-sha-256
+            - host all all ${NODE_SUBNET} scram-sha-256
     volumes:
       - /mnt/data/pgdb-${INSTALL_NODE}:/home/postgres/pgdata
     ports:
       - "${REST_PORT}:8008"
       - "${NODE_PORT_HOST}:${NODE_PORT}"
+    depends_on:
+      - etcd
     networks: [patroni_net]
 
   haproxy:
