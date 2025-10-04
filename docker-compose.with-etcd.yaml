@@ -15,8 +15,6 @@ services:
       --initial-cluster=${ETCD_PEERS}
       --initial-cluster-token=${CLUSTER_TOKEN}
       --initial-cluster-state=new
-      --enable-v2=true
-
     volumes:
       - etcd_data:/etcd-data
 
@@ -79,6 +77,9 @@ services:
             - host all all ${NODE_SUBNET} scram-sha-256
     volumes:
       - /mnt/data/pgdb-${INSTALL_NODE}:/home/postgres/pgdata
+    ports:
+      - "${NODE_PORT_HOST}:${NODE_PORT}"
+      - "${REST_PORT}:${REST_PORT}"
     depends_on:
       - etcd
 
@@ -87,15 +88,6 @@ services:
     container_name: ${INSTALL_NODE}-haproxy
     restart: always
     network_mode: host
-    environment:
-      NODE_PORT: ${NODE_PORT}
-      NODE1_IP: ${NODE1_IP}
-      NODE2_IP: ${NODE2_IP}
-      NODE3_IP: ${NODE3_IP}
-      NODE1_DB_PORT: ${NODE1_DB_PORT}
-      NODE2_DB_PORT: ${NODE2_DB_PORT}
-      NODE3_DB_PORT: ${NODE3_DB_PORT}
-      REST_PORT: ${REST_PORT}
     command:
       - sh
       - -c
@@ -112,7 +104,7 @@ services:
             timeout client 1m
             timeout server 1m
         frontend postgres
-            bind *:${NODE_PORT}
+            bind *:5432
             default_backend pg_cluster
         backend pg_cluster
             option httpchk GET /master
@@ -121,7 +113,6 @@ services:
             server node2 ${NODE2_IP}:${NODE2_DB_PORT} check port ${REST_PORT} inter 1s rise 2 fall 2
             server node3 ${NODE3_IP}:${NODE3_DB_PORT} check port ${REST_PORT} inter 1s rise 2 fall 2
         EOF
-        /usr/local/sbin/haproxy -c -f /tmp/haproxy.cfg
         exec /usr/local/sbin/haproxy -W -db -f /tmp/haproxy.cfg
     depends_on:
       - patroni
