@@ -30,6 +30,9 @@ services:
       PGPORT: ${NODE_PORT}
       APIPORT: ${REST_PORT}
       SPILO_CONFIGURATION: |
+        postgresql:
+          parameters:
+            shared_preload_libraries: 'pg_stat_statements'
         scope: ${SCOPE}
         restapi:
           listen: 0.0.0.0:${REST_PORT}
