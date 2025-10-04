@@ -26,19 +26,23 @@ services:
     restart: always
     network_mode: host
     environment:
-      SCOPE: ${SCOPE}
-      PGPORT: ${NODE_PORT}
+      PGPORT: ${NODE_PORT_HOST}
       APIPORT: ${REST_PORT}
+      SCOPE: ${SCOPE}
+
       SPILO_CONFIGURATION: |
         scope: ${SCOPE}
+
         restapi:
           listen: 0.0.0.0:${REST_PORT}
           connect_address: ${INSTALL_NODE_IP}:${REST_PORT}
+
         etcd:
           hosts:
             - ${NODE1_IP}:${ETCD_CLIENT_PORT}
             - ${NODE2_IP}:${ETCD_CLIENT_PORT}
             - ${NODE3_IP}:${ETCD_CLIENT_PORT}
+
         bootstrap:
           dcs:
             ttl: 30
@@ -62,10 +66,13 @@ services:
             ${APP_USER}:
               password: ${APP_PASS}
               options: [login, createdb]
+
         postgresql:
+          # ฟังบนพอร์ต node (เช่น 15432) เพื่อให้ HAProxy ต่อเข้าไป
           listen: 0.0.0.0:${NODE_PORT_HOST}
           connect_address: ${INSTALL_NODE_IP}:${NODE_PORT_HOST}
           data_dir: /home/postgres/pgdata/pgroot/data
+
           authentication:
             superuser:
               username: ${PG_SUPERUSER}
@@ -73,17 +80,16 @@ services:
             replication:
               username: ${REPL_USER}
               password: ${REPL_PASS}
+
           parameters:
             shared_preload_libraries: 'pg_stat_statements'
+
           pg_hba:
             - host replication ${REPL_USER} ${NODE_SUBNET} scram-sha-256
             - host all all ${NODE_SUBNET} scram-sha-256
 
     volumes:
       - /mnt/data/pgdb-${INSTALL_NODE}:/home/postgres/pgdata
-    ports:
-      - "${NODE_PORT_HOST}:${NODE_PORT}"
-      - "${REST_PORT}:${REST_PORT}"
     depends_on:
       - etcd
 
@@ -97,7 +103,7 @@ services:
       - -c
       - |
         set -e
-        cat > /tmp/haproxy.cfg <<EOF
+        cat > /tmp/haproxy.cfg <<'EOF'
         global
             log stdout format raw local0
             maxconn 200
@@ -111,7 +117,7 @@ services:
             bind *:5432
             default_backend pg_cluster
         backend pg_cluster
-            option httpchk GET /master
+            option httpchk GET /primary
             http-check expect status 200
             server node1 ${NODE1_IP}:${NODE1_DB_PORT} check port ${REST_PORT} inter 1s rise 2 fall 2
             server node2 ${NODE2_IP}:${NODE2_DB_PORT} check port ${REST_PORT} inter 1s rise 2 fall 2
