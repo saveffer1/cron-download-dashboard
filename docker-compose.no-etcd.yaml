@@ -1,0 +1,114 @@
+services:
+  patroni:
+    image: ghcr.io/zalando/spilo-17:4.0-p3
+    container_name: ${INSTALL_NODE}-patroni
+    hostname: ${INSTALL_NODE}
+    restart: always
+    environment:
+      SCOPE: ${SCOPE}
+      PGPORT: ${NODE_PORT}
+      APIPORT: ${REST_PORT}
+      SPILO_CONFIGURATION: |
+        scope: ${SCOPE}
+        restapi:
+          listen: 0.0.0.0:${REST_PORT}
+          connect_address: ${INSTALL_NODE_IP}:${REST_PORT}
+        etcd:
+          host: ${ETCD_CLIENTS}
+        bootstrap:
+          dcs:
+            ttl: 30
+            loop_wait: 10
+            retry_timeout: 10
+            postgresql:
+              parameters:
+                max_connections: 200
+                shared_buffers: 1GB
+                password_encryption: scram-sha-256
+          initdb:
+            - encoding: UTF8
+            - data-checksums
+          users:
+            ${PG_SUPERUSER}:
+              password: ${PG_SUPERPASS}
+              options: [superuser, createdb, createrole]
+            ${REPL_USER}:
+              password: ${REPL_PASS}
+              options: [replication]
+            ${APP_USER}:
+              password: ${APP_PASS}
+              options: [login, createdb]
+        postgresql:
+          listen: 0.0.0.0:${NODE_PORT}
+          connect_address: ${INSTALL_NODE_IP}:${NODE_PORT_HOST}
+          data_dir: /home/postgres/pgdata/pgroot/data
+          authentication:
+            superuser:
+              username: ${PG_SUPERUSER}
+              password: ${PG_SUPERPASS}
+            replication:
+              username: ${REPL_USER}
+              password: ${REPL_PASS}
+          pg_hba:
+            - host replication ${REPL_USER} 192.168.234.0/24 scram-sha-256
+            - host all all 192.168.234.0/24 scram-sha-256
+    volumes:
+      - /mnt/data/pgdb-${INSTALL_NODE}:/home/postgres/pgdata
+    ports:
+      - "${REST_PORT}:8008"
+      - "${NODE_PORT_HOST}:${NODE_PORT}"
+    networks: [patroni_net]
+
+  haproxy:
+    image: haproxy:2.8
+    container_name: ${INSTALL_NODE}-haproxy
+    restart: always
+    environment:
+      NODE_PORT: ${NODE_PORT}
+      NODE1_IP: ${NODE1_IP}
+      NODE2_IP: ${NODE2_IP}
+      NODE3_IP: ${NODE3_IP}
+      NODE1_DB_PORT: ${NODE1_DB_PORT}
+      NODE2_DB_PORT: ${NODE2_DB_PORT}
+      NODE3_DB_PORT: ${NODE3_DB_PORT}
+      REST_PORT: ${REST_PORT}
+    command:
+      - sh
+      - -c
+      - |
+        set -e
+        cat > /tmp/haproxy.cfg <<EOF
+        global
+            log stdout format raw local0
+            maxconn 200
+        defaults
+            log global
+            mode tcp
+            timeout connect 10s
+            timeout client 1m
+            timeout server 1m
+        frontend postgres
+            bind *:${NODE_PORT}
+            default_backend pg_cluster
+        backend pg_cluster
+            option httpchk GET /master
+            http-check expect status 200
+            server node1 ${NODE1_IP}:${NODE1_DB_PORT} check port ${REST_PORT} inter 1s rise 2 fall 2
+            server node2 ${NODE2_IP}:${NODE2_DB_PORT} check port ${REST_PORT} inter 1s rise 2 fall 2
+            server node3 ${NODE3_IP}:${NODE3_DB_PORT} check port ${REST_PORT} inter 1s rise 2 fall 2
+        EOF
+        /usr/local/sbin/haproxy -c -f /tmp/haproxy.cfg
+        exec /usr/local/sbin/haproxy -W -db -f /tmp/haproxy.cfg
+    ports:
+      - "${NODE_PORT}:${NODE_PORT}"
+    depends_on:
+      - patroni
+    networks:
+      - patroni_net
+
+networks:
+  patroni_net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: ${NODE_SUBNET}
