@@ -1,6 +1,6 @@
 services:
   dragonfly:
-    image: docker.dragonflydb.io/dragonflydb/dragonfly:v1.12.1
+    image: docker.dragonflydb.io/dragonflydb/dragonfly:v1.34.1
     container_name: dragonfly
     restart: always
     ulimits:
